@@ -1,1 +1,985 @@
-# TK-design-
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TK — Designer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Bebas+Neue&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root {
+    --scarlet: #CC1010;
+    --scarlet-deep: #8B0000;
+    --scarlet-bright: #FF1A1A;
+    --black: #050507;
+    --surface: #0d0d12;
+    --surface-2: #13131a;
+    --text: #f0ece4;
+    --muted: #6b6780;
+  }
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+scroll-behavior: smooth;
+height: 100%;
+}
+
+body {
+background: var(–black);
+color: var(–text);
+font-family: ‘Syne’, sans-serif;
+overflow-x: hidden;
+cursor: none;
+min-height: 100%;
+}
+
+/* –– CURSOR –– */
+.cursor {
+position: fixed;
+width: 12px;
+height: 12px;
+background: var(–scarlet);
+border-radius: 50%;
+pointer-events: none;
+z-index: 9999;
+transform: translate(-50%, -50%);
+transition: transform 0.1s ease, background 0.2s;
+will-change: left, top;
+}
+.cursor-ring {
+position: fixed;
+width: 40px;
+height: 40px;
+border: 1px solid rgba(204,16,16,0.5);
+border-radius: 50%;
+pointer-events: none;
+z-index: 9998;
+transform: translate(-50%, -50%);
+transition: transform 0.18s ease, border-color 0.2s;
+will-change: left, top;
+}
+
+/* –– CANVAS –– */
+#bg-canvas {
+position: fixed;
+top: 0; left: 0;
+width: 100% !important;
+height: 100% !important;
+z-index: 0;
+pointer-events: none;
+display: block;
+}
+
+/* –– NAV –– */
+nav {
+position: fixed;
+top: 0; left: 0; right: 0;
+z-index: 100;
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 2rem 4rem;
+background: linear-gradient(to bottom, rgba(5,5,7,0.96) 0%, transparent 100%);
+}
+
+.nav-logo {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 2.2rem;
+color: var(–scarlet);
+letter-spacing: 4px;
+text-shadow: 0 0 40px rgba(204,16,16,0.6);
+animation: pulse-glow 3s ease-in-out infinite;
+text-decoration: none;
+}
+
+@keyframes pulse-glow {
+0%, 100% { text-shadow: 0 0 30px rgba(204,16,16,0.5); }
+50% { text-shadow: 0 0 70px rgba(255,26,26,0.9), 0 0 120px rgba(204,16,16,0.3); }
+}
+
+.nav-links {
+display: flex;
+gap: 3rem;
+list-style: none;
+}
+
+.nav-links a {
+color: var(–muted);
+text-decoration: none;
+font-size: 0.75rem;
+font-weight: 700;
+letter-spacing: 3px;
+text-transform: uppercase;
+transition: color 0.3s;
+}
+.nav-links a:hover { color: var(–text); }
+
+/* –– HERO –– */
+.hero {
+position: relative;
+z-index: 1;
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: flex-start;
+padding: 8rem 4rem 4rem;
+overflow: hidden;
+}
+
+.hero-eyebrow {
+font-size: 0.7rem;
+letter-spacing: 6px;
+text-transform: uppercase;
+color: var(–scarlet);
+margin-bottom: 2rem;
+opacity: 0;
+animation: fade-up 1s 0.5s forwards;
+}
+
+.hero-name {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: clamp(7rem, 18vw, 20rem);
+line-height: 0.85;
+color: var(–scarlet);
+letter-spacing: -2px;
+text-shadow: 0 0 80px rgba(204,16,16,0.4);
+opacity: 0;
+animation: fade-up 1s 0.7s forwards, pulse-glow 4s 2s ease-in-out infinite;
+position: relative;
+z-index: 2;
+}
+
+.hero-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(1.4rem, 3vw, 3rem);
+font-style: italic;
+font-weight: 300;
+color: var(–text);
+margin-top: 1.5rem;
+opacity: 0;
+animation: fade-up 1s 0.9s forwards;
+letter-spacing: 2px;
+}
+
+.hero-tagline {
+margin-top: 2.5rem;
+font-size: 0.78rem;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(–muted);
+opacity: 0;
+animation: fade-up 1s 1.1s forwards;
+max-width: 440px;
+line-height: 2.1;
+}
+
+.hero-cta {
+margin-top: 3.5rem;
+opacity: 0;
+animation: fade-up 1s 1.3s forwards;
+}
+
+.btn-primary {
+display: inline-block;
+padding: 1rem 2.5rem;
+background: var(–scarlet);
+color: #fff;
+text-decoration: none;
+font-size: 0.75rem;
+font-weight: 700;
+letter-spacing: 3px;
+text-transform: uppercase;
+position: relative;
+overflow: hidden;
+transition: transform 0.3s, box-shadow 0.3s;
+}
+.btn-primary::before {
+content: ‘’;
+position: absolute;
+top: 0; left: -100%;
+width: 100%; height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+transition: left 0.5s;
+}
+.btn-primary:hover::before { left: 100%; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(204,16,16,0.4); }
+
+.hero-scroll {
+position: absolute;
+bottom: 3rem;
+left: 50%;
+transform: translateX(-50%);
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 1rem;
+color: var(–muted);
+font-size: 0.65rem;
+letter-spacing: 3px;
+text-transform: uppercase;
+}
+
+.scroll-line {
+width: 1px;
+height: 60px;
+background: linear-gradient(to bottom, var(–scarlet), transparent);
+animation: scroll-anim 2s ease-in-out infinite;
+}
+
+@keyframes scroll-anim {
+0%   { transform: scaleY(0); transform-origin: top; }
+50%  { transform: scaleY(1); transform-origin: top; }
+50.01% { transform-origin: bottom; }
+100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+@keyframes fade-up {
+from { opacity: 0; transform: translateY(40px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+/* –– SECTIONS –– */
+section {
+position: relative;
+z-index: 1;
+padding: 10rem 4rem;
+}
+
+.section-label {
+font-size: 0.65rem;
+letter-spacing: 6px;
+text-transform: uppercase;
+color: var(–scarlet);
+margin-bottom: 1rem;
+}
+
+.section-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(2.5rem, 5vw, 5rem);
+font-weight: 300;
+line-height: 1.1;
+color: var(–text);
+margin-bottom: 2rem;
+}
+
+/* –– ABOUT –– */
+.about {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8rem;
+align-items: center;
+}
+
+.about-visual {
+position: relative;
+height: 500px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.about-monogram {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 18rem;
+color: transparent;
+-webkit-text-stroke: 1px rgba(204,16,16,0.2);
+position: absolute;
+line-height: 1;
+animation: float-3d 6s ease-in-out infinite;
+user-select: none;
+pointer-events: none;
+}
+
+.about-card {
+position: relative;
+z-index: 2;
+background: rgba(13,13,18,0.85);
+border: 1px solid rgba(204,16,16,0.18);
+padding: 2.5rem;
+backdrop-filter: blur(20px);
+animation: float-3d 8s ease-in-out infinite reverse;
+}
+
+.about-card-stat {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 4rem;
+color: var(–scarlet);
+line-height: 1;
+text-shadow: 0 0 30px rgba(204,16,16,0.5);
+}
+
+.about-card-label {
+font-size: 0.7rem;
+letter-spacing: 4px;
+text-transform: uppercase;
+color: var(–muted);
+margin-top: 0.5rem;
+}
+
+@keyframes float-3d {
+0%, 100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+33%       { transform: translateY(-20px) rotateX(3deg) rotateY(5deg); }
+66%       { transform: translateY(10px) rotateX(-2deg) rotateY(-3deg); }
+}
+
+.about-text p {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.4rem;
+font-weight: 300;
+line-height: 1.85;
+color: rgba(240,236,228,0.75);
+margin-bottom: 2rem;
+}
+.about-text p em { color: var(–text); font-style: italic; }
+
+/* –– SERVICES –– */
+.services-section {
+background: linear-gradient(180deg, transparent, rgba(139,0,0,0.04) 50%, transparent);
+}
+
+.services-header { text-align: center; margin-bottom: 6rem; }
+
+.services-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 2px;
+background: rgba(204,16,16,0.07);
+}
+
+.service-card {
+background: var(–surface);
+padding: 4rem 3rem;
+position: relative;
+overflow: hidden;
+transition: background 0.4s;
+}
+
+.service-card::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0;
+width: 100%; height: 3px;
+background: var(–scarlet);
+transform: scaleX(0);
+transform-origin: left;
+transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.service-card::after {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: radial-gradient(circle at 30% 40%, rgba(204,16,16,0.06) 0%, transparent 60%);
+opacity: 0;
+transition: opacity 0.4s;
+}
+.service-card:hover { background: var(–surface-2); }
+.service-card:hover::before { transform: scaleX(1); }
+.service-card:hover::after { opacity: 1; }
+
+.service-number {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 5rem;
+color: rgba(204,16,16,0.1);
+line-height: 1;
+position: absolute;
+top: 2rem; right: 2.5rem;
+transition: color 0.4s;
+}
+.service-card:hover .service-number { color: rgba(204,16,16,0.22); }
+
+.service-icon {
+width: 48px; height: 48px;
+margin-bottom: 2rem;
+position: relative; z-index: 1;
+}
+.service-icon svg { width: 100%; height: 100%; stroke: var(–scarlet); fill: none; stroke-width: 1.5; }
+
+.service-name {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 2rem;
+font-weight: 400;
+color: var(–text);
+margin-bottom: 1rem;
+position: relative; z-index: 1;
+}
+
+.service-desc {
+font-size: 0.8rem;
+line-height: 1.9;
+color: var(–muted);
+letter-spacing: 0.3px;
+position: relative; z-index: 1;
+}
+
+/* –– MARQUEE –– */
+.marquee-section {
+padding: 3rem 0;
+overflow: hidden;
+border-top: 1px solid rgba(204,16,16,0.12);
+border-bottom: 1px solid rgba(204,16,16,0.12);
+background: rgba(204,16,16,0.025);
+}
+
+.marquee-track {
+display: flex;
+gap: 4rem;
+animation: marquee 22s linear infinite;
+white-space: nowrap;
+width: max-content;
+}
+
+.marquee-item {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 1.4rem;
+letter-spacing: 4px;
+color: var(–scarlet);
+opacity: 0.6;
+flex-shrink: 0;
+}
+.marquee-sep { color: rgba(204,16,16,0.3); font-size: 1.4rem; font-family: ‘Cormorant Garamond’, serif; flex-shrink: 0; }
+
+@keyframes marquee {
+from { transform: translateX(0); }
+to   { transform: translateX(-50%); }
+}
+
+/* –– PHILOSOPHY –– */
+.philosophy {
+text-align: center;
+padding: 12rem 4rem;
+position: relative;
+overflow: hidden;
+}
+
+.philosophy-quote {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(2rem, 4vw, 4.5rem);
+font-style: italic;
+font-weight: 300;
+line-height: 1.45;
+color: var(–text);
+max-width: 1000px;
+margin: 0 auto;
+position: relative;
+z-index: 1;
+}
+.philosophy-quote span { color: var(–scarlet); }
+
+.quote-mark {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 20rem;
+color: rgba(204,16,16,0.05);
+position: absolute;
+top: -4rem; left: 3rem;
+line-height: 1;
+user-select: none;
+pointer-events: none;
+}
+
+/* –– CONTACT –– */
+.contact-section {
+background: var(–surface);
+padding: 10rem 4rem;
+position: relative;
+overflow: hidden;
+}
+.contact-section::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 1px;
+background: linear-gradient(90deg, transparent, var(–scarlet), transparent);
+}
+
+.contact-inner {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8rem;
+align-items: center;
+}
+
+.contact-bg-text {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 16rem;
+color: rgba(204,16,16,0.04);
+position: absolute;
+bottom: -3rem; right: -2rem;
+user-select: none; pointer-events: none;
+line-height: 1;
+}
+
+.contact-info { position: relative; z-index: 1; }
+.contact-info .section-title { font-size: clamp(2rem, 4vw, 4rem); }
+
+/* WhatsApp button */
+.contact-whatsapp {
+display: flex;
+align-items: center;
+gap: 1.5rem;
+margin-top: 3rem;
+padding: 2rem 2.5rem;
+border: 1px solid rgba(204,16,16,0.2);
+background: rgba(204,16,16,0.04);
+text-decoration: none;
+transition: border-color 0.3s, background 0.3s, transform 0.3s;
+cursor: pointer;
+}
+.contact-whatsapp:hover {
+border-color: rgba(37,211,102,0.5);
+background: rgba(37,211,102,0.06);
+transform: translateY(-2px);
+}
+
+.wa-icon {
+width: 28px; height: 28px; flex-shrink: 0;
+}
+.wa-icon svg { width: 100%; height: 100%; }
+
+.wa-label {
+display: flex;
+flex-direction: column;
+gap: 0.25rem;
+}
+.wa-tag {
+font-size: 0.6rem;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: #25D366;
+opacity: 0.8;
+}
+.wa-number {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 2rem;
+color: var(–text);
+letter-spacing: 3px;
+line-height: 1;
+}
+
+.contact-right { position: relative; z-index: 1; }
+
+.contact-capabilities { list-style: none; }
+.contact-capabilities li {
+display: flex;
+align-items: center;
+gap: 1.5rem;
+padding: 1.5rem 0;
+border-bottom: 1px solid rgba(255,255,255,0.05);
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.4rem;
+color: rgba(240,236,228,0.7);
+transition: color 0.3s, padding-left 0.3s;
+}
+.contact-capabilities li:hover { color: var(–text); padding-left: 1rem; }
+.contact-capabilities li::before {
+content: ‘’;
+width: 6px; height: 6px;
+background: var(–scarlet);
+border-radius: 50%;
+flex-shrink: 0;
+box-shadow: 0 0 10px var(–scarlet);
+}
+
+/* –– DIVIDER –– */
+.scarlet-divider {
+width: 60px; height: 1px;
+background: var(–scarlet);
+margin: 2rem 0;
+position: relative;
+}
+.scarlet-divider::after {
+content: ‘’;
+position: absolute;
+right: -10px; top: -3px;
+width: 7px; height: 7px;
+border-right: 1px solid var(–scarlet);
+border-top: 1px solid var(–scarlet);
+}
+
+/* –– FOOTER –– */
+footer {
+position: relative; z-index: 1;
+padding: 3rem 4rem;
+display: flex;
+justify-content: space-between;
+align-items: center;
+border-top: 1px solid rgba(255,255,255,0.05);
+background: var(–black);
+}
+.footer-logo {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 1.5rem;
+color: var(–scarlet);
+letter-spacing: 4px;
+text-shadow: 0 0 20px rgba(204,16,16,0.4);
+}
+.footer-copy {
+font-size: 0.65rem;
+letter-spacing: 2px;
+color: var(–muted);
+text-transform: uppercase;
+}
+
+/* –– REVEAL –– */
+.reveal {
+opacity: 0;
+transform: translateY(50px);
+transition: opacity 0.9s cubic-bezier(0.19,1,0.22,1), transform 0.9s cubic-bezier(0.19,1,0.22,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* –– NOISE –– */
+.noise {
+position: fixed;
+inset: 0;
+z-index: 200;
+pointer-events: none;
+opacity: 0.022;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’/%3E%3C/svg%3E”);
+background-repeat: repeat;
+background-size: 128px 128px;
+}
+
+/* –– RESPONSIVE –– */
+@media (max-width: 900px) {
+nav { padding: 1.5rem 2rem; }
+.nav-links { display: none; }
+section { padding: 6rem 2rem; }
+.hero { padding: 7rem 2rem 4rem; }
+.about { grid-template-columns: 1fr; gap: 4rem; }
+.about-visual { height: 300px; }
+.about-monogram { font-size: 12rem; }
+.services-grid { grid-template-columns: 1fr; }
+.contact-inner { grid-template-columns: 1fr; gap: 4rem; }
+footer { flex-direction: column; gap: 1rem; text-align: center; }
+.contact-bg-text { display: none; }
+.philosophy { padding: 7rem 2rem; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<canvas id="bg-canvas"></canvas>
+
+<!-- Navigation -->
+
+<nav>
+  <a href="#" class="nav-logo">TK</a>
+  <ul class="nav-links">
+    <li><a href="#about">À Propos</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+
+<section class="hero">
+  <p class="hero-eyebrow">Studio Créatif — Haïti</p>
+  <h1 class="hero-name">TK</h1>
+  <p class="hero-title">Designer Visuel & Directeur Créatif</p>
+  <p class="hero-tagline">Des identités visuelles qui transcendent l'ordinaire — du pixel à l'impression, chaque détail est intentionnel.</p>
+  <div class="hero-cta">
+    <a href="https://wa.me/50931145765" target="_blank" class="btn-primary">Démarrer un Projet</a>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Défiler</span>
+  </div>
+</section>
+
+<!-- Marquee -->
+
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">Sites Web</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Flyers</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Cartes de Visite</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Identité de Marque</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Design Print</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Direction Créative</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Réseaux Sociaux</span><span class="marquee-sep">✦</span>
+    <!-- duplicate for seamless loop -->
+    <span class="marquee-item">Sites Web</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Flyers</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Cartes de Visite</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Identité de Marque</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Design Print</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Direction Créative</span><span class="marquee-sep">✦</span>
+    <span class="marquee-item">Réseaux Sociaux</span><span class="marquee-sep">✦</span>
+  </div>
+</div>
+
+<!-- About -->
+
+<section id="about">
+  <div class="about reveal">
+    <div class="about-visual">
+      <div class="about-monogram">TK</div>
+      <div class="about-card">
+        <div class="about-card-stat">∞</div>
+        <div class="about-card-label">Possibilités Créées</div>
+      </div>
+    </div>
+    <div class="about-text">
+      <p class="section-label">Qui Suis-Je</p>
+      <h2 class="section-title">Le design n'est pas<br>une décoration —<br>c'est un <em>langage.</em></h2>
+      <div class="scarlet-divider"></div>
+      <p>Je suis TK, un <em>designer visuel</em> qui croit que chaque projet mérite une identité qui parle avant les mots. Que vous construisiez une marque depuis zéro ou que vous élèviez l'existant, je traduis votre vision en <em>quelque chose d'inoubliable.</em></p>
+      <p>Basé en Haïti, actif à l'<em>échelle mondiale</em>. Du site web au flyer, de la carte de visite à l'affiche — si ça doit être vu, je le rends digne d'être regardé.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Services -->
+
+<section id="services" class="services-section">
+  <div class="services-header reveal">
+    <p class="section-label">Ce Que Je Fais</p>
+    <h2 class="section-title">Services</h2>
+  </div>
+  <div class="services-grid reveal">
+
+```
+<div class="service-card">
+  <div class="service-number">01</div>
+  <div class="service-icon">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+  </div>
+  <h3 class="service-name">Sites Web</h3>
+  <p class="service-desc">Expériences web premium et immersives conçues pour captiver et convertir. Des portfolios aux pages professionnelles — bâties avec intention, lancées avec impact.</p>
+</div>
+
+<div class="service-card">
+  <div class="service-number">02</div>
+  <div class="service-icon">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  </div>
+  <h3 class="service-name">Flyers</h3>
+  <p class="service-desc">Flyers d'événements, supports promotionnels et annonces qui commandent l'attention — conçus avec une typographie audacieuse et une hiérarchie visuelle ciblée.</p>
+</div>
+
+<div class="service-card">
+  <div class="service-number">03</div>
+  <div class="service-icon">
+    <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+  </div>
+  <h3 class="service-name">Cartes de Visite</h3>
+  <p class="service-desc">Votre première impression ne devrait pas être oubliable. Des cartes conçues pour marquer les esprits — imprimées avec personnalité, fabriquées avec précision.</p>
+</div>
+
+<div class="service-card" style="grid-column: 1 / -1; padding: 3rem 4rem;">
+  <div class="service-number" style="font-size:8rem; opacity:0.07;">∞</div>
+  <div class="service-icon">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+  </div>
+  <h3 class="service-name" style="font-size:2.5rem;">Tu Nommes — Je Crée</h3>
+  <p class="service-desc" style="max-width:650px;">Logos · Identité Visuelle · Graphismes Réseaux Sociaux · Affiches · Bannières · Menus · Étiquettes · Packaging · Présentations · Et tout ce dont vous avez besoin. Si ça requiert du design, je le livre.</p>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- Philosophy -->
+
+<section class="philosophy">
+  <div class="quote-mark">"</div>
+  <p class="philosophy-quote reveal">
+    Chaque visuel qui quitte mes mains porte une seule conviction — que <span>le grand design ne se contente pas d'être beau,</span> il fait ressentir aux gens quelque chose qu'ils ne peuvent pas ignorer.
+  </p>
+</section>
+
+<!-- Contact -->
+
+<section id="contact" class="contact-section">
+  <div class="contact-bg-text">TK</div>
+  <div class="contact-inner">
+    <div class="contact-info reveal">
+      <p class="section-label">Entrer en Contact</p>
+      <h2 class="section-title">Construisons quelque chose<br><em style="color:var(--scarlet);font-family:'Cormorant Garamond',serif;">d'extraordinaire.</em></h2>
+      <div class="scarlet-divider"></div>
+      <p style="font-size:0.85rem; color:var(--muted); line-height:2.1; letter-spacing:0.5px; margin-bottom:2rem;">Prêt à transformer votre vision en réalité visuelle ? Contactez-moi — réponse sous 24 heures.</p>
+
+```
+  <!-- WhatsApp button -->
+  <a class="contact-whatsapp" href="https://wa.me/50931145765" target="_blank" rel="noopener noreferrer">
+    <div class="wa-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12a11.93 11.93 0 0 0 1.64 6.07L0 24l6.11-1.6A11.94 11.94 0 0 0 12 24c6.63 0 12-5.37 12-12a11.93 11.93 0 0 0-3.48-8.52zM12 22a9.93 9.93 0 0 1-5.06-1.38l-.36-.22-3.77.99 1-3.67-.23-.38A9.94 9.94 0 0 1 2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10zm5.44-7.3c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51-.17 0-.37-.02-.57-.02s-.52.07-.8.37c-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.09 4.49.71.31 1.27.5 1.7.63.72.23 1.37.2 1.89.12.58-.09 1.76-.72 2.01-1.41.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.34z" fill="#25D366"/>
+      </svg>
+    </div>
+    <div class="wa-label">
+      <span class="wa-tag">WhatsApp — Message Direct</span>
+      <span class="wa-number">+509 3114 5765</span>
+    </div>
+  </a>
+</div>
+
+<div class="contact-right reveal">
+  <p class="section-label" style="margin-bottom:2rem;">Compétences</p>
+  <ul class="contact-capabilities">
+    <li>Conception & Développement Web</li>
+    <li>Flyers & Promotion d'Événements</li>
+    <li>Cartes de Visite & Business Cards</li>
+    <li>Logo & Identité de Marque</li>
+    <li>Graphismes Réseaux Sociaux</li>
+    <li>Affiches, Bannières & Print</li>
+    <li>Design Sur Mesure — Tu Nommes</li>
+  </ul>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- Footer -->
+
+<footer>
+  <div class="footer-logo">TK</div>
+  <p class="footer-copy">© 2025 TK Designer — Tous Droits Réservés</p>
+  <p class="footer-copy">+509 3114 5765</p>
+</footer>
+
+<script>
+/* ===== THREE.JS BACKGROUND ===== */
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const W = () => canvas.parentElement ? canvas.parentElement.clientWidth  : window.innerWidth;
+  const H = () => canvas.parentElement ? canvas.parentElement.clientHeight : window.innerHeight;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 8);
+
+  // Icosahedron
+  const ico = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(3, 1),
+    new THREE.MeshBasicMaterial({ color: 0xCC1010, wireframe: true, transparent: true, opacity: 0.08 })
+  );
+  ico.position.set(5, 0, -3);
+  scene.add(ico);
+
+  // Torus
+  const torus = new THREE.Mesh(
+    new THREE.TorusGeometry(2, 0.4, 16, 80),
+    new THREE.MeshBasicMaterial({ color: 0x8B0000, wireframe: true, transparent: true, opacity: 0.06 })
+  );
+  torus.position.set(-6, -2, -5);
+  torus.rotation.x = Math.PI / 4;
+  scene.add(torus);
+
+  // Octahedron
+  const octa = new THREE.Mesh(
+    new THREE.OctahedronGeometry(1.5, 0),
+    new THREE.MeshBasicMaterial({ color: 0xCC1010, wireframe: true, transparent: true, opacity: 0.12 })
+  );
+  octa.position.set(-4, 4, -4);
+  scene.add(octa);
+
+  // Particles
+  const count = 400;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i*3]   = (Math.random()-0.5)*40;
+    pos[i*3+1] = (Math.random()-0.5)*40;
+    pos[i*3+2] = (Math.random()-0.5)*20 - 5;
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xCC1010, size: 0.04, transparent: true, opacity: 0.5 }));
+  scene.add(particles);
+
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => {
+    mx = (e.clientX / window.innerWidth  - 0.5) * 2;
+    my = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  const clock = new THREE.Clock();
+  (function loop() {
+    requestAnimationFrame(loop);
+    const t = clock.getElapsedTime();
+    ico.rotation.x   = t * 0.10 + my * 0.2;
+    ico.rotation.y   = t * 0.15 + mx * 0.2;
+    torus.rotation.x = t * 0.08;
+    torus.rotation.z = t * 0.12 + mx * 0.1;
+    octa.rotation.x  = t * 0.20;
+    octa.rotation.y  = t * 0.25;
+    particles.rotation.y = t * 0.02;
+    particles.rotation.x = my * 0.05;
+    camera.position.x += (mx * 0.3 - camera.position.x) * 0.03;
+    camera.position.y += (-my * 0.2 - camera.position.y) * 0.03;
+    camera.lookAt(scene.position);
+    renderer.render(scene, camera);
+  })();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+/* ===== CUSTOM CURSOR ===== */
+(function() {
+  const cursor = document.getElementById('cursor');
+  const ring   = document.getElementById('cursorRing');
+  let cx=0, cy=0, rx=0, ry=0;
+
+  document.addEventListener('mousemove', e => { cx = e.clientX; cy = e.clientY; });
+
+  (function loop() {
+    requestAnimationFrame(loop);
+    cursor.style.left = cx + 'px';
+    cursor.style.top  = cy + 'px';
+    rx += (cx - rx) * 0.15;
+    ry += (cy - ry) * 0.15;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+  })();
+
+  document.querySelectorAll('a, button, .service-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'translate(-50%,-50%) scale(2.5)';
+      cursor.style.background = 'rgba(204,16,16,0.3)';
+      ring.style.transform = 'translate(-50%,-50%) scale(1.5)';
+      ring.style.borderColor = 'rgba(204,16,16,0.8)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+      cursor.style.background = '#CC1010';
+      ring.style.transform = 'translate(-50%,-50%) scale(1)';
+      ring.style.borderColor = 'rgba(204,16,16,0.5)';
+    });
+  });
+})();
+
+/* ===== SCROLL REVEAL ===== */
+const io = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 80);
+  });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+/* ===== HERO PARALLAX ===== */
+window.addEventListener('scroll', () => {
+  const name = document.querySelector('.hero-name');
+  if (name) name.style.transform = `translateY(${window.scrollY * 0.28}px)`;
+});
+</script>
+
+</body>
+</html>
